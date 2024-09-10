@@ -1,0 +1,104 @@
+---
+title: "Programming in R- Loops & Functions"
+author: "Jayesh Thakur"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## Homework 3
+
+Webpage created for submission of HW3 ST-558
+
+## Loading .rda file
+
+Loading .rda file
+
+```{r}
+load("hw2_list.rda")
+```
+
+## Task 1: Control flow practice
+
+I have used two for loops, one is for **looping the dataframes in bp_list** and other is for **looping the number of observation** in each dataframe as the number of observation is not same in *treatment* and *placebo*. I started with hard coded dataframe name and *status* column length and looping each *post_bp* value to populate *status* column. Then I used **nrow()** to loop till that value and initialize the *status* column. Post this I used **names()** to loop through the dataframe names and selected that dataframe to initialize *df* variable.
+
+```{r}
+for (df_name in names(bp_list)) 
+{
+  # loop through each dataframe in bp_list
+  df <- bp_list[[df_name]]
+  # used nrow to remove hardcoding for 10 and 20 length
+  df$status <- character(nrow(df))
+  for (i in 1:nrow(df))
+    {
+      if (df$post_bp[i] <= 120) 
+        {
+          df$status[i] <- "Optimal"
+        } 
+      else if (df$post_bp[i] > 120 && df$post_bp[i] <= 130) 
+        {
+          df$status[i] <- "Borderline"
+        }
+      else 
+        {
+          df$status[i] <- "High"
+        }
+    }
+  bp_list[[df_name]] <- df
+}
+
+bp_list
+```
+
+## Task 2: Function implementation
+
+I have created function *summarize_bp_stats* which will take input of dataframe and one string (which if not given will be "mean"). I used **get()** to get function from input into *my_fun*. Then I use *my_fun()* to *pre_bp, post_bp* and *diff_bp* of both dataframes, namely *treatment* and *placebo*. To name the resultant vector I concatenate input provided by user in *stat* variable to **"\_dataframeName_columnName"** format. And assign those names to result vector.
+
+```{r}
+summarize_bp_stats <- function(df_list, stat = "mean")
+{
+  my_fun <- get(stat)
+  
+  treatment_df <- df_list$treatment
+  placebo_df <- df_list$placebo
+
+  treatment_pre <- my_fun(treatment_df$pre_bp)
+  treatment_post <- my_fun(treatment_df$post_bp)
+  treatment_diff <- my_fun(treatment_df$diff_bp)
+  
+  placebo_pre <- my_fun(placebo_df$pre_bp)
+  placebo_post <- my_fun(placebo_df$post_bp)
+  placebo_diff <- my_fun(placebo_df$diff_bp)
+
+  result_values <- c(treatment_pre,
+                     treatment_post, 
+                     treatment_diff, 
+                     placebo_pre, 
+                     placebo_post, 
+                     placebo_diff)
+  
+  result_names <- c(paste0(stat, "_treatment_pre_bp"),
+                    paste0(stat, "_treatment_post_bp"), 
+                    paste0(stat, "_treatment_diff_bp"),
+                    paste0(stat, "_placebo_pre_bp"), 
+                    paste0(stat, "_placebo_post_bp"), 
+                    paste0(stat, "_placebo_diff_bp"))
+
+  names(result_values) <- result_names
+  
+  return(result_values)
+}
+
+mean_results <- summarize_bp_stats(bp_list) # Default which is mean
+var_results <- summarize_bp_stats(bp_list, "var") # Variance
+sd_results <- summarize_bp_stats(bp_list, "sd") # Standard deviation
+min_results <- summarize_bp_stats(bp_list, "min") # Minimum
+max_results <- summarize_bp_stats(bp_list, "max") # Maximum
+
+mean_results
+var_results
+sd_results
+min_results
+max_results
+```
